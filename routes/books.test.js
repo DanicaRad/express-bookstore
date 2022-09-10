@@ -52,7 +52,21 @@ describe('bookRoutes Test', function () {
                 .send(newTestBook);
             expect(resp.statusCode).toEqual(201);
             expect(resp.body.book).toEqual(newTestBook);
+
+            const getBookResp = await request(app).get("/books/111");
+            expect(getBookResp.statusCode).toEqual(200);
+            expect(getBookResp.body.book).toEqual({
+                isbn: '111',
+                amazon_url: "http://test2.com",
+                author: 'New Test Author',
+                language: 'english',
+                pages: 100,
+                publisher: 'New Test Press',
+                title: 'New Test Book',
+                year: 2020
+            });
         });
+
         test("throws error if invalid schema", async function() {
             const resp = await request(app)
                 .post("/books")
@@ -107,7 +121,12 @@ describe('bookRoutes Test', function () {
             expect(resp.body.book.title).toEqual('Updated Test Book');
             expect(resp.body.book.pages).toEqual(200);
             expect(resp.body.book.isbn).toEqual(testBook.isbn);
+
+            const getBookResp = await request(app).get(`/books/${testBook.isbn}`);
+            expect(getBookResp.statusCode).toEqual(200);
+            expect(getBookResp.body.book.title).toEqual('Updated Test Book');
         });
+
         test("throws error if invalid schema", async function() {
             const resp = await request(app)
                 .put(`/books/${testBook.isbn}`)
@@ -124,6 +143,7 @@ describe('bookRoutes Test', function () {
             expect(resp.statusCode).toEqual(400);
             expect(resp.body.message).toContain('instance.pages is not of a type(s) integer');
         });
+
         test("throws error if missing schema properties", async function() {
             const resp = await request(app)
                 .put(`/books/${testBook.isbn}`)
@@ -136,7 +156,6 @@ describe('bookRoutes Test', function () {
 			        publisher: 'Test Press Company',
 			        title: 'Test Book',
                 });
-            console.log("ERROR****** ", resp.body);
             expect(resp.statusCode).toEqual(400);
             expect(resp.body.message).toContain('instance requires property "year"');
         });
@@ -147,7 +166,12 @@ describe('bookRoutes Test', function () {
             const resp = await request(app).delete(`/books/${testBook.isbn}`);
             expect(resp.statusCode).toEqual(200);
             expect(resp.body.message).toEqual('Book deleted');
+
+            const getDeletedBookResp = await request(app).get(`/bookb/${testBook.isbn}`);
+            expect(getDeletedBookResp.statusCode).toEqual(404);
+            expect(getDeletedBookResp.body.message).toEqual(`Not Found`);
         });
+
         test("throws error if isbn does not exist", async function() {
             const resp = await request(app).delete('/books/zzz');
             expect(resp.statusCode).toEqual(404);
